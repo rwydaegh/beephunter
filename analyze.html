@@ -27,9 +27,9 @@
 <body>
 <header>
   <h1>BEEP<span>HUNTER</span> · analyze</h1>
-  <label class="file">Reference JSON <input type="file" id="refFile" accept=".json"></label>
-  <label class="file">Hunter JSON <input type="file" id="huntFile" accept=".json"></label>
-  <span class="hint" id="msg">load both recordings…</span>
+  <label class="file">Hunter JSON (required) <input type="file" id="huntFile" accept=".json"></label>
+  <label class="file">Reference JSON (optional) <input type="file" id="refFile" accept=".json"></label>
+  <span class="hint" id="msg">load the hunter recording (reference optional)…</span>
   <a href="index.html">← capture</a>
 </header>
 <div id="map"></div>
@@ -41,11 +41,11 @@
     <div class="card"><div class="k">Abeam crossings used</div><div class="v"><span id="ncross">–</span></div></div>
   </div>
   <div class="grid" style="margin-top:12px">
-    <div class="card"><div class="k">Differential level (hunter − reference)</div><canvas id="lvlCv"></canvas></div>
-    <div class="card"><div class="k">Doppler shift (hunter − reference)</div><canvas id="dopCv"></canvas></div>
+    <div class="card"><div class="k">Hunter speed (GPS)</div><canvas id="lvlCv"></canvas></div>
+    <div class="card"><div class="k">Doppler shift vs rest f₀ (red=approaching, blue=receding)</div><canvas id="dopCv"></canvas></div>
   </div>
   <p class="hint" id="explain"></p>
 </div>
-<script src="analyze.js"></script>
+<script src="analyze.js?v=4"></script>
 </body>
 </html>
