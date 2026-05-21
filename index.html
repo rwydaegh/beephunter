@@ -22,6 +22,12 @@
   button.active{background:rgba(54,211,153,.2);border-color:var(--accent);color:var(--accent);}
   .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
 
+  /* HUNT MODE (glanceable) */
+  .hunt{text-align:center;transition:background .25s;}
+  #huntArrow{font-size:96px;line-height:1;font-weight:900;color:#5b6776;transition:color .15s,transform .12s;}
+  #huntWord{font-size:20px;font-weight:800;letter-spacing:1px;margin-top:2px;color:var(--dim);}
+  #huntNum{font-size:24px;font-weight:700;color:var(--dim);margin-top:2px;} #huntNum small{font-size:13px;}
+
   /* DOPPLER HERO */
   .hero{background:linear-gradient(180deg,#16202c,#0f1620);}
   #badge{font-size:13px;font-weight:700;padding:3px 10px;border-radius:7px;background:#1d2733;color:var(--dim);}
@@ -57,6 +63,16 @@
   </div>
   <div class="row" style="margin-top:8px"><button class="big go" id="startBtn">▶ Start mic</button></div>
   <div id="status" class="hint" style="margin-top:6px">Tap Start; allow microphone + location.</div>
+</div>
+
+<!-- HUNT MODE (glanceable, AirTag-style) -->
+<div class="panel hunt" id="huntPanel">
+  <div class="row" style="justify-content:space-between">
+    <div class="k">🔥 Hunt — chase the heat</div><div id="huntState" class="hint">stand still to zero</div>
+  </div>
+  <div id="huntArrow">·</div>
+  <div id="huntWord">— set rest f₀ —</div>
+  <div id="huntNum">+0.0 <small>Hz</small></div>
 </div>
 
 <!-- DOPPLER HERO -->
@@ -98,6 +114,6 @@
   <div class="hint" style="margin-top:6px">Analyze recordings on the <a href="analyze.html">analyzer page →</a></div>
 </div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

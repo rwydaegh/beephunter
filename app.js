@@ -13,7 +13,7 @@
  *    (it's multipath-corrupted and not a reliable localizer).
  */
 'use strict';
-const BUILD = '4';
+const BUILD = '5';
 const $ = id => document.getElementById(id);
 const C_SOUND = 343.0;
 const RING_SEC = 3.0;
@@ -159,6 +159,26 @@ function drawDoppler(){ const w=dop.width,h=dop.height; dctx.clearRect(0,0,w,h);
     dctx.lineWidth=2*devicePixelRatio; dctx.beginPath(); dctx.moveTo(x0,Y(dfHist[i-1])); dctx.lineTo(x1,Y(v)); dctx.stroke(); }
 }
 
+// --------------------------------------------------- HUNT meter (glanceable)
+function updateHunt(df, spd){
+  const a=$('huntArrow'), w=$('huntWord'), n=$('huntNum'), pan=$('huntPanel'), st=$('huntState');
+  if(df==null){ a.textContent='·'; a.style.color='#5b6776'; a.style.transform='scale(1)';
+    w.textContent='— set rest f₀ —'; w.style.color='var(--dim)'; n.innerHTML='+0.0 <small>Hz</small>';
+    pan.style.background=''; st.textContent='stand still to zero'; return; }
+  const cap=8.0, mag=Math.min(Math.abs(df),cap)/cap, sc='scale('+(0.7+0.6*mag).toFixed(2)+')';
+  const moving = (spd==null) || spd>0.5;
+  n.innerHTML=(df>=0?'+':'')+df.toFixed(1)+' <small>Hz</small>';
+  if(!moving){ a.textContent='·'; a.style.color='#5b6776'; a.style.transform='scale(1)';
+    w.textContent='move to read'; w.style.color='var(--dim)'; pan.style.background=''; st.textContent='standing still — zeroing'; return; }
+  st.textContent='hunting';
+  if(df>0.6){ a.textContent='▲'; a.style.color='var(--hot)'; a.style.transform=sc;
+    w.textContent='WARMER · keep going'; w.style.color='var(--hot)'; pan.style.background='rgba(248,114,114,'+(0.05+0.22*mag).toFixed(2)+')'; }
+  else if(df<-0.6){ a.textContent='▼'; a.style.color='var(--cold)'; a.style.transform=sc;
+    w.textContent='COLDER · turn around'; w.style.color='var(--cold)'; pan.style.background='rgba(58,191,248,'+(0.05+0.22*mag).toFixed(2)+')'; }
+  else { a.textContent='◆'; a.style.color='#fff'; a.style.transform='scale(0.85)';
+    w.textContent='ABEAM · source beside you'; w.style.color='#fff'; pan.style.background='rgba(255,255,255,.06)'; }
+}
+
 // ------------------------------------------------------------------ UI loop
 function tick(){
   if(!running) return;
@@ -189,6 +209,13 @@ function tick(){
   } else if(calVals.length){ restF0=median(calVals); calVals=[];
     $('restTxt').textContent='rest f₀ = '+restF0.toFixed(2)+' Hz'; }
 
+  // auto-zero rest f0 while essentially stationary (the source pitch is now stable),
+  // so the hunt meter re-zeros every time you stop walking.
+  if(calUntil<=Date.now() && gps.spd!=null && gps.spd<0.3 && ff.conf>0.3 && isFinite(fineEMA)){
+    if(restF0==null){ restF0=fineEMA; $('restTxt').textContent='rest f₀ ≈ '+restF0.toFixed(2)+' Hz (auto)'; }
+    else restF0 += 0.05*(fineEMA-restF0);
+  }
+
   // --- doppler ---
   let df=null;
   if(restF0!=null){ df=fineEMA-restF0; dfHist.push(df); if(dfHist.length>DF_HIST) dfHist.shift();
@@ -204,6 +231,7 @@ function tick(){
       if(sgn!==0) lastDfSign=sgn; }
   }
   $('abeam').style.opacity = abeamFlashUntil>Date.now() ? '1':'0';
+  updateHunt(df, gps.spd);
 
   // --- displays ---
   $('freqHero').innerHTML=fineEMA.toFixed(2)+' <small>Hz</small>';
