@@ -43,9 +43,10 @@ function series(data, field){
 }
 function resample(s, t0, t1, dt){
   const out=[]; let j=0;
+  if(!s.length){ for(let t=t0;t<=t1;t+=dt) out.push(NaN); return out; }
   for(let t=t0;t<=t1;t+=dt){
     while(j<s.length-1 && s[j+1].t<t) j++;
-    if(j>=s.length-1){ out.push(s[Math.min(j,s.length-1)].v); continue; }
+    if(j>=s.length-1){ out.push(s[s.length-1].v); continue; }
     const a=s[j], b=s[j+1], f=(t-a.t)/Math.max(1,(b.t-a.t));
     out.push(a.v + f*(b.v-a.v));
   }
@@ -78,6 +79,19 @@ function run(){
   const t1=Math.min(refData.rows.at(-1).tw, huntData.rows.at(-1).tw);
   if(t1-t0 < 3000){ $('msg').textContent='recordings barely overlap in time — check clocks'; }
 
+  // sanity: do both files actually contain frequency/level data?
+  const have = (d,f)=>series(d,f).length;
+  const probs=[];
+  if(!have(refData,'f'))   probs.push('reference has no frequency data');
+  if(!have(huntData,'f'))  probs.push('hunter has no frequency data');
+  if(!have(refData,'lvl')) probs.push('reference has no level data');
+  if(!have(huntData,'lvl'))probs.push('hunter has no level data');
+  if(probs.length){
+    $('msg').innerHTML = '<span style="color:#f87272">'+probs.join('; ')+
+      ' — re-record with the latest app (the mic DSP produced nothing).</span>';
+    $('explain').textContent='';
+    return;
+  }
   const refL=resample(series(refData,'lvl'),t0,t1,dt);
   const huntL=resample(series(huntData,'lvl'),t0,t1,dt);
   const refF=resample(series(refData,'f'),t0,t1,dt);

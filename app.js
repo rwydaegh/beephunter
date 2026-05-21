@@ -119,14 +119,28 @@ function coarsePeak(center, half){
   const binHz = fs/analyser.fftSize;
   const lo=Math.max(1,Math.floor((center-half)/binHz)), hi=Math.ceil((center+half)/binHz);
   let bi=lo, bv=-Infinity;
-  for(let i=lo;i<=hi && i<freqData.length;i++) if(freqData[i]>bv){bv=freqData[i];bi=i;}
-  // parabolic interpolation around the peak bin
+  for(let i=lo;i<=hi && i<freqData.length;i++)
+    if(isFinite(freqData[i]) && freqData[i]>bv){ bv=freqData[i]; bi=i; }
+  if(!isFinite(bv)) return {f:NaN, db:-Infinity};      // no audio yet -> caller keeps last
+  // parabolic interpolation around the peak bin (guard every step against NaN/Inf)
   let delta=0;
   if(bi>0 && bi<freqData.length-1){
-    const a=freqData[bi-1],b=freqData[bi],c=freqData[bi+1],d=(a-2*b+c);
-    if(d!==0) delta=0.5*(a-c)/d;
+    const a=freqData[bi-1],b=freqData[bi],c=freqData[bi+1];
+    if(isFinite(a)&&isFinite(b)&&isFinite(c)){
+      const d=(a-2*b+c);
+      if(d!==0){ delta=0.5*(a-c)/d; if(!isFinite(delta)||Math.abs(delta)>1) delta=0; }
+    }
   }
   return {f:(bi+delta)*binHz, db:bv};
+}
+
+// raw broadband input level — independent of tone tracking, proves mic is alive
+let tdData=null;
+function inputLevelDb(){
+  if(!tdData || tdData.length!==analyser.fftSize) tdData=new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(tdData);
+  let s=0; for(let i=0;i<tdData.length;i++) s+=tdData[i]*tdData[i];
+  return 20*Math.log10(Math.sqrt(s/tdData.length)+1e-12);
 }
 
 // --------------------------------------- fine frequency via demod + zoom search
@@ -192,16 +206,20 @@ function drawScope(env){
 function tick(){
   if(!running) return;
   const center=+$('center').value, half=+$('halfband').value;
+  const inDb = inputLevelDb();
   const cp=coarsePeak(center,half);
-  if(autoTrack) coarseF = coarseF + 0.3*(cp.f-coarseF); // gentle track
+  if(autoTrack){ if(isFinite(cp.f)) coarseF += 0.3*(cp.f-coarseF); }
   else coarseF = center;
+  if(!isFinite(coarseF)) coarseF = center;            // never let it go NaN
   const ff=fineFreq(coarseF);
-  fineF=ff.f; fineEMA = fineEMA + 0.35*(fineF-fineEMA);
+  if(isFinite(ff.f) && ff.level>1e-9){ fineF=ff.f; fineEMA += 0.35*(fineF-fineEMA); }
+  if(!isFinite(fineEMA)) fineEMA = coarseF;
   const cad=cadence(ff.env, ff.fsbb);
-  const levelDb = 10*Math.log10(ff.level+1e-12);
+  const levelDb = isFinite(ff.level)&&ff.level>0 ? 10*Math.log10(ff.level) : -120;
 
   // display
   $('freqHero').innerHTML = fineEMA.toFixed(2)+' <small>Hz</small>';
+  $('status').textContent = `capturing @ ${fs} Hz · input ${inDb.toFixed(0)} dB`+(inDb<-70?' ⚠ silent — check mic':'');
   const locked = cp.db>-70 && cad.conf>0.25 && cad.hz>=1 && cad.hz<=6;
   $('badge').textContent = locked?'● LOCKED':'○ searching'; $('badge').className = locked?'locked':'';
   $('cad').textContent = cad.hz? cad.hz.toFixed(2):'–';
@@ -219,8 +237,12 @@ function tick(){
   }
 
   if(recording) recRows.push({
-    tw:Date.now(), f:+fineEMA.toFixed(3), df:restF0!=null?+(fineEMA-restF0).toFixed(3):null,
-    lvl:+levelDb.toFixed(2), cad:+cad.hz.toFixed(2), conf:+cad.conf.toFixed(2),
+    tw:Date.now(),
+    f: isFinite(fineEMA)? +fineEMA.toFixed(3): null,
+    df: (restF0!=null && isFinite(fineEMA))? +(fineEMA-restF0).toFixed(3): null,
+    lvl: isFinite(levelDb)? +levelDb.toFixed(2): null,
+    inlvl: isFinite(inDb)? +inDb.toFixed(2): null,
+    cad: +cad.hz.toFixed(2), conf: +cad.conf.toFixed(2),
     lat:gps.lat, lon:gps.lon, acc:gps.acc, spd:gps.spd, hdg:gps.hdg
   });
   if(recording) $('recInfo').textContent = `recording… ${recRows.length} rows · ${(recRows.length>0?((Date.now()-recMeta.started)/1000):0).toFixed(0)}s`;
