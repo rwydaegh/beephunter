@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# generated / data
+desktop/map.html
+*.stackdump
+.rm_confirmed
+
+# recordings & logs (keep one sample in desktop/ if you like)
+beephunter_*.json
