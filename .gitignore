@@ -3,10 +3,22 @@ __pycache__/
 *.pyc
 .venv/
 
+# private location / contact config — never publish
+desktop/home.local.json
+
 # generated / data
 desktop/map.html
 *.stackdump
 .rm_confirmed
+
+# generated analysis outputs (regenerable; embed walk tracks near home)
+overview.html
+walk_map.html
+*.png
+
+# personal screenshots
+*.jpeg
+*.jpg
 
 # recordings & logs (keep one sample in desktop/ if you like)
 beephunter_*.json

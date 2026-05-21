@@ -16,13 +16,8 @@ from math import cos, radians
 import numpy as np
 from scipy.optimize import least_squares
 
-# --- GPS waypoints of the walked loop (lat, lon), closed back to start ------
-WAYPOINTS = [
-    (51.028244, 3.727147),  # P0  (start/end)
-    (51.028157, 3.726526),  # P1
-    (51.028093, 3.726618),  # P2
-    (51.028177, 3.727106),  # P3
-]
+# --- GPS waypoints of the walked loop (lat, lon); real values in gitignored config ---
+from bh_config import WALK as WAYPOINTS
 
 
 def load(path):
