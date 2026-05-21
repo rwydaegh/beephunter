@@ -13,6 +13,7 @@ desktop/map.html
 
 # generated analysis outputs (regenerable; embed walk tracks near home)
 overview.html
+overview_*.html
 walk_map.html
 *.png
 

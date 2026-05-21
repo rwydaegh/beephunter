@@ -14,8 +14,10 @@ if os.path.exists(_f):
     CONTACT = _d.get("contact", "https://github.com/rwydaegh/beephunter")
     DOPSRC = tuple(_d["dopsrc"]) if "dopsrc" in _d else HOME
     WALK = [tuple(p) for p in _d.get("walk", [])]
+    HOMELABEL = _d.get("homelabel", "HOME")     # keep any house number out of the public repo
 else:
     HOME = (51.05, 3.72)        # placeholder — set yours in desktop/home.local.json
     CONTACT = "https://github.com/rwydaegh/beephunter"
     DOPSRC = (51.05, 3.72)
     WALK = []
+    HOMELABEL = "HOME"
