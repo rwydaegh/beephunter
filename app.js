@@ -7,6 +7,7 @@
  * the FFT bin width, which is what Doppler (a few Hz on ~3 kHz) demands.
  */
 'use strict';
+const BUILD = '3';
 const $ = id => document.getElementById(id);
 const C_SOUND = 343.0;            // speed of sound, m/s
 const RING_SEC = 4.0;             // rolling capture buffer
@@ -274,6 +275,9 @@ $('dlBtn').onclick = ()=>{
   const stamp=new Date(recMeta.started).toISOString().replace(/[:.]/g,'-').slice(0,19);
   a.download=`beephunter_${recMeta.role}_${recMeta.label}_${stamp}.json`; a.click();
 };
+
+// show build so we can confirm fresh (non-cached) code is loaded
+if($('ver')) $('ver').textContent = 'build '+BUILD;
 
 // try to pre-list mics (labels appear only after permission)
 navigator.mediaDevices?.enumerateDevices && listMics();
